@@ -1,57 +1,53 @@
-import React, {useState} from 'react';
-import axios from 'axios';
-import  './Login.css';
+import React, { useState } from 'react';
+import api from './api';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const [email, setEmail] = useState ('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await api.post('/login', { email, password });
+      setMessage(response.data.message);
+      // Store accountID in localStorage (or you can keep it in state)
+      localStorage.setItem('accountID', response.data.accountID);
+      navigate('/dashboard'); // Change to dashboard after login
+    } catch (error) {
+      setMessage(error.response.data.message);
+    }
+  };
 
-        try{
-            const response = await axios.post('/api/login',  { email, password });
-            //Handle successful login(e.g., store thetoken, redirect user)
-            console.log(response.data);
-            setLoading(false);
-        }catch(err){
-            setError('Invali email or password');
-            setLoading(false);
-        }
-    };
-
-    return(
-        <div className="login-constraint">
-            <h2>Login</h2>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)} required
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)} required
-                    />
-                </div>
-                {error && <div className="error">{error}</div>}
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Login'}
-                </button>
-            </form>
+  return (
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-    );
+        <div>
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
+        {message && <p>{message}</p>}
+      </form>
+    </div>
+  );
 };
 
 export default Login;
